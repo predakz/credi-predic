@@ -20,7 +20,7 @@ def predict():
     # Probability threshold over whch a customer is considered as a good one
     threshold = 0.5757575757575758
     # Importing data
-    data = pd.read_csv('C:/Users/Paul/Documents/Cours Data Scientist OC/Projet 7/data/cleaned_data.csv', index_col=0)
+    data = pd.read_csv('cleaned_data.csv', index_col=0)
     list_features = pickle.load(open('Pickles/features.pkl', 'rb')) # Features used
     model = pickle.load(open('Pickles/randfor.pkl', 'rb')) # Trained model (Random Forests)
     transformers = pickle.load(open('Pickles/transformers.pkl', 'rb')) # Transformations to apply on data
