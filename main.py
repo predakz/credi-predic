@@ -13,7 +13,7 @@ import dill as pickle
 app = Flask(__name__)
 
 def transform_userdata(data, list_transfo, transfo):
-    if len(data)==len(transfo):
+    if len(data.columns)==len(transfo):
         data = data.drop('TARGET', axis=1)
         for i in list_transfo:
             data[i] = transfo[i].transform(data[i])
