@@ -15,6 +15,7 @@ app = Flask(__name__)
 # Function returning a prediction based on a customer ID
 @app.route('/predict', methods=['GET'])
 def predict():
+    print('test')
     # Reading the customer ID in the request
     username = int(request.args.get('customer'))
     # Probability threshold over whch a customer is considered as a good one
