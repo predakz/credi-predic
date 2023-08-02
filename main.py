@@ -12,10 +12,20 @@ import dill as pickle
 
 app = Flask(__name__)
 
+def transform_userdata(data, list_transfo, transfo):
+    if len(data)==len(transfo):
+        data = data.drop('TARGET', axis=1)
+        for i in list_transfo:
+            data[i] = transfo[i].transform(data[i])
+        print('Données traitées avec succès')
+        return 1
+    else:
+        print("Problème dans les données de l'utilisateur")
+        return 0
+
 # Function returning a prediction based on a customer ID
 @app.route('/predict', methods=['GET'])
 def predict():
-    print('test')
     # Reading the customer ID in the request
     username = int(request.args.get('customer'))
     # Probability threshold over whch a customer is considered as a good one
@@ -28,20 +38,18 @@ def predict():
     list_transformers = [i for i in transformers]  # as a list (1 element = 1 feature)
     explainer = pickle.load(open('Pickles/explainer.pkl', 'rb')) #load lime explainer
     distributions = pickle.load(open('Pickles/distributions.pkl', 'rb')) # Distributions in different features for the explainer
-    print('Verifying ID: '+str(username))
+    print('Verification ID: '+str(username))
     if username not in data.index:
         # Raise an error if the ID is unknown
         return {
-            'Status': 'Error',
-            'Message': 'Error: Unknown ID'
+            'Statut': 'Erreur',
+            'Message': 'Erreur: ID inconnu'
         }
     else:
         # Loading data for the customer whose ID has been entered
         data_user = pd.DataFrame(data.loc[[username]])
-        data_user = data_user.drop('TARGET', axis=1)
         # Applying the right transformations on data
-        for i in list_transformers:
-            data_user[i] = transformers[i].transform(data_user[i])
+        transform_userdata(data_user, list_transformers, transformers)
         # Calculating the customer's score and generating the prediction according to this score
         proba = model.predict_proba(data_user.values.reshape(1,-1))[0][1]
         prediction = 1 if proba > threshold else 0
@@ -62,11 +70,11 @@ def predict():
         for i in feat_to_plot:
             distributions_to_plot[i] = distributions[i]
         return jsonify({
-                'Status': 'Success',
-                'Prediction': int(prediction),
+                'Statut': 'Succès',
+                'Prédiction': int(prediction),
                 'Score': score,
-                'Threshold': round(threshold, 3),
-                'User info': data_user.to_dict(),
+                'Seuil': round(threshold, 3),
+                'Infos utilisateur': data_user.to_dict(),
                 'Explainer map': expl_details_map.to_dict('list'),
                 'Explainer list': expl_details_list,
                 'Distributions': distributions_to_plot
