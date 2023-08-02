@@ -12,15 +12,12 @@ import dill as pickle
 
 app = Flask(__name__)
 
-def transform_userdata(data, list_transfo, transfo):
-    if len(data.columns)==len(transfo):
-        data = data.drop('TARGET', axis=1)
-        for i in list_transfo:
-            data[i] = transfo[i].transform(data[i])
-        print('Données traitées avec succès')
+def check_data(data):
+    if len(data)==251845:
+        print('Données chargées avec succès')
         return 1
     else:
-        print("Problème dans les données de l'utilisateur")
+        print("Problème dans les données")
         return 0
 
 # Function returning a prediction based on a customer ID
@@ -32,6 +29,7 @@ def predict():
     threshold = 0.5757575757575758
     # Importing data
     data = pd.read_csv('cleaned_data.csv', index_col=0)
+    check = check_data(data)
     list_features = pickle.load(open('Pickles/features.pkl', 'rb')) # Features used
     model = pickle.load(open('Pickles/randfor.pkl', 'rb')) # Trained model (Random Forests)
     transformers = pickle.load(open('Pickles/transformers.pkl', 'rb')) # Transformations to apply on data
@@ -45,11 +43,18 @@ def predict():
             'Statut': 'Erreur',
             'Message': 'Erreur: ID inconnu'
         }
+    elif check == 0:
+        return {
+            'Statut': 'Erreur',
+            'Message': 'Problème dans les données'
+        }
     else:
         # Loading data for the customer whose ID has been entered
         data_user = pd.DataFrame(data.loc[[username]])
+        data_user = data_user.drop('TARGET', axis=1)
         # Applying the right transformations on data
-        transform_userdata(data_user, list_transformers, transformers)
+        for i in list_transformers:
+            data_user[i] = transformers[i].transform(data_user[i])
         # Calculating the customer's score and generating the prediction according to this score
         proba = model.predict_proba(data_user.values.reshape(1,-1))[0][1]
         prediction = 1 if proba > threshold else 0
